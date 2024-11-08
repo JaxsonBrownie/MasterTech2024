@@ -42,7 +42,7 @@ html5lib==1.1
 httplib2==0.20.2
 idna==3.3
 importlib-metadata==4.6.4
-ipython==8.29.0
+IPython==8.29.0
 itsdangerous==2.2.0
 jedi==0.19.1
 jeepney==0.7.1
