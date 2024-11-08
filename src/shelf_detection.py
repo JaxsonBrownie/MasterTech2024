@@ -15,6 +15,9 @@ from ultralytics import YOLO
 from IPython.display import display, Image
 import matplotlib.pyplot as plt
 
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='TRUE'
+
 def test_model_on_image(weights_path, image_path):
     """
     Test trained model on a single image and display results
@@ -55,17 +58,14 @@ def test_model_on_image(weights_path, image_path):
     
     # Print detection results
     # Check if detection is a tuple and has class_id as attribute
-    for detection in detections:
-      if isinstance(detection, tuple) and hasattr(detection[0], 'class_id'):
-          class_id = detection[0].class_id
-          confidence = detection[0].confidence
-          box = detection[0].xyxy[0]
-          print(f"Detected {results.names[class_id]} with confidence: {confidence:.2f}")
-          print(f"Bounding box: {box}")
-      else:
-        #Skip if it's just tuple without class_id
-        continue
-
+        # Print detection results - Fixed version
+    for i in range(len(detections.xyxy)):
+        class_id = detections.class_id[i]
+        confidence = detections.confidence[i]
+        box = detections.xyxy[i]
+        print(f"Detected {results.names[class_id]} with confidence: {confidence:.2f}")
+        print(f"Bounding box: {box}")
+        
 def main():
     # Update these paths to match your Google Drive locations
     WEIGHTS_PATH = "../weights/shelf_detection_weights.pt"
