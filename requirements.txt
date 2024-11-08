@@ -2,7 +2,6 @@ appdirs==1.4.4
 apturl==0.5.2
 asn1crypto==1.4.0
 asttokens==2.4.1
-auto-subtitle @ git+https://github.com/m1guelpf/auto-subtitle.git@124ccb1ac17d5b7a27dd81b3d8f8fed6ef1a5408
 bcrypt==3.2.0
 beautifulsoup4==4.10.0
 blinker==1.8.2
