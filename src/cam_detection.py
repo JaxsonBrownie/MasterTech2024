@@ -26,7 +26,8 @@ def run_live_detection(weights_path):
         results = model(frame)[0]
 
         # Setup supervision for visualization
-        detections = sv.Detections.from_yolov8(results)
+        # detections = sv.Detections.from_yolov8(results)
+        detections = sv.Detections.from_ultralytics(results)
 
         # Create box annotator
         box_annotator = sv.BoxAnnotator()
