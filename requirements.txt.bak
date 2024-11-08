@@ -3,4 +3,4 @@ opencv-python-headless
 supervision
 triton==2.0.0
 IPython
-numpy
+numpy==1.23.5
