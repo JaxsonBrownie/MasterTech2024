@@ -68,8 +68,8 @@ def test_model_on_image(weights_path, image_path):
 
 def main():
     # Update these paths to match your Google Drive locations
-    WEIGHTS_PATH = "/content/drive/MyDrive/Cisco Live Mastertech/runs/detect/shelf_detection/weights/best.pt"
-    TEST_IMAGE_PATH = "/content/drive/MyDrive/Cisco Live Mastertech/cam_test/test_img_9.jpg"
+    WEIGHTS_PATH = "../weights/shelf_detection_weights.pt"
+    TEST_IMAGE_PATH = "../images/test_img_9.jpg"
     
     test_model_on_image(WEIGHTS_PATH, TEST_IMAGE_PATH)
 

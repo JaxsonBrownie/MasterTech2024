@@ -1,0 +1,6 @@
+ultralytics
+opencv-python-headless
+supervision
+triton==2.0.0
+IPython
+numpy
