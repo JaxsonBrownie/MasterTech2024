@@ -1,7 +1,7 @@
 # Install required packages
-!pip install ultralytics
-!pip install opencv-python-headless
-!pip install supervision
+#!pip install ultralytics
+#!pip install opencv-python-headless
+#!pip install supervision
 
 # Mount to Google Drive
 # from google.colab import drive
