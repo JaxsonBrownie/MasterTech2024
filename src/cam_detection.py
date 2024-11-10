@@ -32,12 +32,12 @@ def run_live_detection(weights_path):
         # Create box annotator
         box_annotator = sv.BoxAnnotator()
 
-        # Annotate the frame
+        # Annotate image
         annotated_frame = box_annotator.annotate(
             scene=frame.copy(),
             detections=detections,
-            labels=[f"{results.names[class_id]} {confidence:0.2f}"
-                    for class_id, confidence in zip(detections.class_id, detections.confidence)]
+        #     labels=[f"{results.names[class_id]} {confidence:0.2f}"
+        #             for class_id, confidence in zip(detections.class_id, detections.confidence)]
         )
 
         # Display the annotated frame
