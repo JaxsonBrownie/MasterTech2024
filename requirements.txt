@@ -1,6 +1,7 @@
 ultralytics
 opencv-python-headless
 supervision
+streamlit
 IPython
 triton==2.0.0
 numpy==1.23.5
