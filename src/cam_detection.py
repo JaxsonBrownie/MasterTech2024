@@ -5,6 +5,7 @@ import supervision as sv
 from ultralytics import YOLO
 from IPython.display import display, Image
 import matplotlib.pyplot as plt
+import torch
 
 def run_live_detection(weights_path):
     """
@@ -13,6 +14,7 @@ def run_live_detection(weights_path):
         weights_path: Path to the trained YOLOv8 weights.
     """
     # Load the trained model
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     model = YOLO(weights_path)
 
     # Open the default camera
