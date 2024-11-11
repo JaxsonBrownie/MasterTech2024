@@ -10,7 +10,7 @@ import torch
 from streamlit.runtime.scriptrunner import RerunException, StopException
 
 # function to mark bottom left of bounding box as (0,0) and then find the coordinate of the top right corner via number of pixels 
-def add_box_coordinates(frame, boxes, scale_factor=10):
+def add_box_coordinates(frame, boxes, scale_factor=100):
     for box in boxes:
         x1, y1, x2, y2 = box.astype(int)
         
