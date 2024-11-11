@@ -90,6 +90,7 @@ def run_live_detection(weights_path, stframe):
             ret, frame = cam.read()
             
             if ret:
+                #time.sleep(0.5)
                 results = model(frame)[0]
                 
                 # Setup supervision for visualisation
