@@ -63,7 +63,12 @@ def create_structure():
 
     # create sidebar
     with st.sidebar:
-        st.image("images/logo.svg", width=200)
+        _, col, _ = st.columns([1,10,1])
+        with col:
+            st.image("images/logo.svg", width=500)
+        
+        st.write('')
+        st.write('')
         st.markdown("## Global View")
         st.markdown("## Individual Shelf View")
 
@@ -84,7 +89,6 @@ def display_sensor_row(sensor1, sensor2):
     with st.container(height=60, border=False):
         if sensor1 is not None: icon1, text1, status1 = sensor1 
         if sensor2 is not None: icon2, text2, status2 = sensor2 
-
 
         c_icon1, c_text1, c_status1, _, c_icon2, c_text2, c_status2 = st.columns([1,3,3,3,1,3,3], vertical_alignment="center")
         if sensor1 is not None:
@@ -117,14 +121,14 @@ def display_sensors():
     # location info
     with loc:
         with st.container(height=320):
-            st.markdown("### Shelf Location")
+            st.markdown("## Shelf Location")
             st.markdown("#### Aisle: 3")
             st.markdown("#### Shelf: 7")
     
     # sensor info
     with sensors:
         with st.container(height=320):
-            st.markdown("### Available Sensors")
+            st.markdown("## Available Sensors")
 
             image_sensor = ("images/camera_logo.svg", "Camera", "Active")
             weight_sensor = ("images/scale_logo.svg", "Weight", "Active")
@@ -135,7 +139,7 @@ def display_sensors():
             light_sensor = ("images/light_logo.svg", "Light", "Inactive")
             display_sensor_row(light_sensor, None)
 
-# setup tabs for the sensors
+# setup tabs for the sensors (not used anymore)
 def display_tabs():
     global stframe
 
@@ -205,34 +209,74 @@ def display_tabs():
         with light_tab:
             st.header("Lighting")
 
+# setup columns for the sensors
+def display_columns():
+    global stframe
+
+    camera_col, env_col = st.columns([3, 2], gap='medium')
+
+    with camera_col:
+        st.markdown("# Camera Feed")
+
+        # gap detection
+        with st.container(border=True):
+            st.markdown("#### Shelf Gap Detection")
+            stframe = st.image([])
+        st.markdown("#### Information")
+
+    with env_col:
+        st.markdown("# Environment Sensors")
+
+        # weight
+        with st.container(border=True):
+            col1, col2 = st.columns([1,4])
+            with col1:
+                st.image("images/weight.svg", width=70)
+            with col2:
+                st.markdown("## Weight: 17.14kg", unsafe_allow_html=True)
+
+        # humidity
+        with st.container(border=True):
+            col1, col2 = st.columns([1,4])
+            with col1:
+                st.image("images/water_drops.svg", width=70)
+            with col2:
+                st.markdown("## Humidity: 30%", unsafe_allow_html=True)
+
+        # temperature
+        with st.container(border=True):
+            col1, col2 = st.columns([1,4])
+            with col1:
+                st.image("images/temp_logo.svg", width=70)
+            with col2:
+                st.markdown("## Temperature: 24°C", unsafe_allow_html=True)
+
+        # lighting
+        with st.container(border=True):
+            col1, col2 = st.columns([1,4])
+            with col1:
+                st.image("images/light_logo.svg", width=70)
+            with col2:
+                st.markdown("## Lighting: On", unsafe_allow_html=True)
+
 
 # main function 
 def main():
-    global stframe, cap
+    global stframe
 
     # render everything
     configure()
     create_structure()
     display_sensors()
-    display_tabs()
+    st.divider()
+    #display_tabs()
+    display_columns()
+
+    # start camera
+    cam = cv2.VideoCapture(0)
 
     # start main loop
     try:
-        #_, frame = cap.read()
-        #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        #stframe.image(frame, channels="RGB")
-        #cam_detection.run_live_detection("../weights/shelf_detection_weights.pt", stframe)
-
-
-        # Location inputs
-        #col1, col2, col3 = st.columns(3)
-        #with col1:
-        #    aisle = st.number_input("Aisle Number", min_value=1, max_value=99, value=1)
-        #with col2:
-        #    shelf = st.number_input("Shelf Number", min_value=1, max_value=10, value=1)
-        #with col3:
-        #    row = st.number_input("Row Number", min_value=1, max_value=5, value=1)
-        
         
         aisle=99
         shelf=10
@@ -242,13 +286,10 @@ def main():
         
         status_placeholder = st.empty()
 
-
-
-
-
-         # Get coordinate generator
-        coordinate_generator = run_live_detection("../weights/shelf_detection_weights.pt", stframe)
+        # get coordinate generator (this starts a loop, but for some reason doesn't block???)
+        coordinate_generator = run_live_detection("../weights/shelf_detection_weights.pt", stframe, cam)
         
+        # start looping thread
         while True:
             coordinate_data = next(coordinate_generator)
             
@@ -280,7 +321,7 @@ def main():
                 # Small delay to prevent overwhelming the system
                 sleep(1)
     except (RerunException, StopException):
-        cap.release()
+        cam.release()
 
 
 if __name__ == '__main__':

@@ -66,88 +66,55 @@ def add_box_coordinates(frame, boxes, scale_factor=100):
     return frame, coordinate_data
 
 #function for doing the cv with the camera integrated
-def run_live_detection(weights_path, stframe):
-
-    coordinate_data = []
+def run_live_detection(weights_path, stframe, cam):
     # check if jetson use gpu instead of cpu (answer: it does not)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
 
-
     #use trained model(best weights stored in mastertech2024/weights folder)
     model = YOLO(weights_path)
-    
-    # open camera at index 0 (0 is default cam, so integrated webcam for laptops, but usb for jetson)
-    cam = cv2.VideoCapture(0)
-
     latest_coordinate = None
 
-    
-    
     while True:
-        try:
-            #read and inference frame
-            ret, frame = cam.read()
+        #read and inference frame
+        ret, frame = cam.read()
+        
+        if ret:
+            results = model(frame)[0]
             
-            if ret:
-                #time.sleep(0.5)
-                results = model(frame)[0]
-                
-                # Setup supervision for visualisation
-                detections = sv.Detections.from_ultralytics(results)
-                
-                # Annotate image and corner cordinates
-                box_annotator = sv.BoxAnnotator()
-                annotated_frame = box_annotator.annotate(
-                    scene=frame.copy(),
-                    detections=detections,
+            # Setup supervision for visualisation
+            detections = sv.Detections.from_ultralytics(results)
+            
+            # Annotate image and corner cordinates
+            box_annotator = sv.BoxAnnotator()
+            annotated_frame = box_annotator.annotate(
+                scene=frame.copy(),
+                detections=detections,
+            )
+
+            # coordinate_data = None
+            if len(detections) > 0:
+                annotated_frame, coordinate_data = add_box_coordinates(
+                    annotated_frame, 
+                    detections.xyxy,  # Gets boxes in xyxy format
+                    scale_factor=100
                 )
 
-                # coordinate_data = None
-                if len(detections) > 0:
-                    annotated_frame, coordinate_data = add_box_coordinates(
-                        annotated_frame, 
-                        detections.xyxy,  # Gets boxes in xyxy format
-                        scale_factor=100
-                    )
+                latest_coordinate = []
+                for box in detections.xyxy:
+                    x1, y1, x2, y2 = box.astype(int)
 
-                    latest_coordinate = []
-                    for box in detections.xyxy:
-                        x1, y1, x2, y2 = box.astype(int)
-
-                        # store the coordinate data
-                        bottom_left, top_right = get_cordinates(box, 100)
-                        latest_coordinate.append((bottom_left, top_right))
-
-
-
-
-
-                    
-                else:
-                    latest_coordinate = None
+                    # store the coordinate data
+                    bottom_left, top_right = get_cordinates(box, 100)
+                    latest_coordinate.append((bottom_left, top_right))
                 
-                #cv2.imshow('Shelf Detection', annotated_frame)
-                annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
-                stframe.image(annotated_frame, channels="RGB")
+            else:
+                latest_coordinate = None
             
-            # if coordinate_data:
-            #     return coordinate_data
-            
-                # return latest_coordinate
-                yield latest_coordinate
-            
-            # Press 'q' to exit the loop
-                if cv2.waitKey(1) == ord('q'):
-                    break
-        except (RerunException, StopException):
-            cam.release()
-            # break
-            break
-    
-    # release and close cam
-    cam.release()
-    cv2.destroyAllWindows()
+            annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+            stframe.image(annotated_frame, channels="RGB")
+        
+            yield latest_coordinate
 
 def main():
     WEIGHTS_PATH = "../weights/shelf_detection_weights.pt"
