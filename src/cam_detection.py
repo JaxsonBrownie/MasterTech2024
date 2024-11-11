@@ -54,27 +54,29 @@ def run_live_detection(weights_path, stframe):
         try:
             #read and inference frame
             ret, frame = cam.read()
-            results = model(frame)[0]
             
-            # Setup supervision for visualisation
-            detections = sv.Detections.from_ultralytics(results)
-            
-            # Annotate image and corner cordinates
-            box_annotator = sv.BoxAnnotator()
-            annotated_frame = box_annotator.annotate(
-                scene=frame.copy(),
-                detections=detections,
-            )
-            if len(detections) > 0:
-                annotated_frame = add_box_coordinates(
-                    annotated_frame, 
-                    detections.xyxy,  # Gets boxes in xyxy format
-                    scale_factor=100
+            if ret:
+                results = model(frame)[0]
+                
+                # Setup supervision for visualisation
+                detections = sv.Detections.from_ultralytics(results)
+                
+                # Annotate image and corner cordinates
+                box_annotator = sv.BoxAnnotator()
+                annotated_frame = box_annotator.annotate(
+                    scene=frame.copy(),
+                    detections=detections,
                 )
-            
-            #cv2.imshow('Shelf Detection', annotated_frame)
-            annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
-            stframe.image(annotated_frame, channels="RGB")
+                if len(detections) > 0:
+                    annotated_frame = add_box_coordinates(
+                        annotated_frame, 
+                        detections.xyxy,  # Gets boxes in xyxy format
+                        scale_factor=100
+                    )
+                
+                #cv2.imshow('Shelf Detection', annotated_frame)
+                annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+                stframe.image(annotated_frame, channels="RGB")
             
             # Press 'q' to exit the loop
             if cv2.waitKey(1) == ord('q'):
