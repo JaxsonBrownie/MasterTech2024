@@ -41,7 +41,6 @@ def configure():
         <div class="main-content">
     """, unsafe_allow_html=True)
 
-
 # setup the page structure
 def create_structure():
     img, title = st.columns([1,18], vertical_alignment='bottom')
@@ -189,14 +188,14 @@ def main():
     display_tabs()
 
     # start main loop
-    #while True:
-    #    try:
-    #        #_, frame = cap.read()
-    #        #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    #        #stframe.image(frame, channels="RGB")
-    #        cam_detection.run_live_detection("../weights/shelf_detection_weights.pt", stframe)
-    #    except (RerunException, StopException):
-    #        cap.release()
+    while True:
+        try:
+            #_, frame = cap.read()
+            #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            #stframe.image(frame, channels="RGB")
+            cam_detection.run_live_detection("../weights/shelf_detection_weights.pt", stframe)
+        except (RerunException, StopException):
+            cap.release()
 
 
 if __name__ == '__main__':
