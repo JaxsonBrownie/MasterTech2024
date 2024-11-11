@@ -268,7 +268,6 @@ def main():
     configure()
     create_structure()
     display_sensors()
-    st.divider()
     #display_tabs()
     display_columns()
 
@@ -319,7 +318,7 @@ def main():
                 status_placeholder.text(f"Updated coordinates for {current_sku}\nCoordinates: BL{bottom_left}, TR{top_right}")
                 
                 # Small delay to prevent overwhelming the system
-                sleep(1)
+                #sleep(1)
     except (RerunException, StopException):
         cam.release()
 
