@@ -8,24 +8,29 @@ import matplotlib.pyplot as plt
 import torch
 
 # function to mark bottom left of bounding box as (0,0) and then find the coordinate of the top right corner via number of pixels 
-def add_corner_coordinates(frame, scale_factor=100):
-    height, width = frame.shape[:2]
-    
-    # calc coordinates after scaling (e.g. 640 pixels and 100 scale = 640/100 = 6.40)
-    top_right = f"({width/scale_factor:.1f}, {height/scale_factor:.1f})"
-    bottom_left = "(0.0, 0.0)"
-    
-    # Top right corner
-    cv2.putText(frame, top_right, 
-                (width - 150, 30), 
-                cv2.FONT_HERSHEY_DUPLEX, 
-                0.7, (0, 255, 0), 2)
-    
-    # Bottom left corner
-    cv2.putText(frame, bottom_left, 
-                (10, height - 10), 
-                cv2.FONT_HERSHEY_DUPLEX, 
-                0.7, (0, 255, 0), 2)
+def add_box_coordinates(frame, boxes, scale_factor=100):
+    for box in boxes:
+        x1, y1, x2, y2 = box.astype(int)
+        
+        # calculate the  relative coordinates (using bottom left as origin)
+        width = (x2 - x1) / scale_factor
+        height = (y2 - y1) / scale_factor
+        
+        # Format coordinates 
+        bottom_left = "(0.0, 0.0)"
+        top_right = f"({width:.1f}, {height:.1f})"
+        
+        # Bottom left coordinates just below box
+        cv2.putText(frame, bottom_left,
+                    (x1, y2 + 20),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    0.5, (0, 255, 0), 1)
+        
+        # Top right cordinates just above
+        cv2.putText(frame, top_right,
+                    (x2 - 100, y1 - 10),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    0.5, (0, 255, 0), 1)
     
     return frame
 
@@ -56,7 +61,12 @@ def run_live_detection(weights_path):
             scene=frame.copy(),
             detections=detections,
         )
-        annotated_frame = add_corner_coordinates(annotated_frame)
+        if len(detections) > 0:
+            annotated_frame = add_box_coordinates(
+                annotated_frame, 
+                detections.xyxy,  # Gets boxes in xyxy format
+                scale_factor=100
+            )
         
         cv2.imshow('Shelf Detection', annotated_frame)
         
