@@ -4,6 +4,7 @@ import cv2
 from streamlit_webrtc import webrtc_streamer,VideoTransformerBase
 from time import sleep
 from streamlit.runtime.scriptrunner import RerunException, StopException
+from cam_detection import run_live_detection
 
 # configure the page
 st.set_page_config(
@@ -15,7 +16,7 @@ st.set_page_config(
 st.markdown("<style> footer {visibility: hidden;} </style>", unsafe_allow_html=True)
 
 # camera config
-cap = cv2.VideoCapture(0)
+#cap = cv2.VideoCapture(0)
 stframe = None
 
 # setup the page structure
@@ -61,9 +62,10 @@ def main():
     # start main loop
     while True:
         try:
-            _, frame = cap.read()
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            stframe.image(frame, channels="RGB")
+            #_, frame = cap.read()
+            #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            #stframe.image(frame, channels="RGB")
+            run_live_detection("../weights/shelf_detection_weights.pt", stframe)
         except (RerunException, StopException):
             cap.release()
 

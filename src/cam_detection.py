@@ -5,7 +5,9 @@ import supervision as sv
 from ultralytics import YOLO
 from IPython.display import display, Image
 import matplotlib.pyplot as plt
+import streamlit as st
 import torch
+from streamlit.runtime.scriptrunner import RerunException, StopException
 
 # function to mark bottom left of bounding box as (0,0) and then find the coordinate of the top right corner via number of pixels 
 def add_box_coordinates(frame, boxes, scale_factor=100):
@@ -35,7 +37,7 @@ def add_box_coordinates(frame, boxes, scale_factor=100):
     return frame
 
 #function for doing the cv with the camera integrated
-def run_live_detection(weights_path):
+def run_live_detection(weights_path, stframe):
 
     # force jetson to use gpu instead of cpu 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -49,32 +51,36 @@ def run_live_detection(weights_path):
     cam = cv2.VideoCapture(0)
     
     while True:
-        
-        #read and inference frame
-        ret, frame = cam.read()
-        results = model(frame)[0]
-        
-        # Setup supervision for visualisation
-        detections = sv.Detections.from_ultralytics(results)
-        
-        # Annotate image and corner cordinates
-        box_annotator = sv.BoxAnnotator()
-        annotated_frame = box_annotator.annotate(
-            scene=frame.copy(),
-            detections=detections,
-        )
-        if len(detections) > 0:
-            annotated_frame = add_box_coordinates(
-                annotated_frame, 
-                detections.xyxy,  # Gets boxes in xyxy format
-                scale_factor=100
+        try:
+            #read and inference frame
+            ret, frame = cam.read()
+            results = model(frame)[0]
+            
+            # Setup supervision for visualisation
+            detections = sv.Detections.from_ultralytics(results)
+            
+            # Annotate image and corner cordinates
+            box_annotator = sv.BoxAnnotator()
+            annotated_frame = box_annotator.annotate(
+                scene=frame.copy(),
+                detections=detections,
             )
-        
-        cv2.imshow('Shelf Detection', annotated_frame)
-        
-        # Press 'q' to exit the loop
-        if cv2.waitKey(1) == ord('q'):
-            break
+            if len(detections) > 0:
+                annotated_frame = add_box_coordinates(
+                    annotated_frame, 
+                    detections.xyxy,  # Gets boxes in xyxy format
+                    scale_factor=100
+                )
+            
+            #cv2.imshow('Shelf Detection', annotated_frame)
+            annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+            stframe.image(annotated_frame, channels="RGB")
+            
+            # Press 'q' to exit the loop
+            if cv2.waitKey(1) == ord('q'):
+                break
+        except (RerunException, StopException):
+            cam.release()
     
     # release and close cam
     cam.release()
