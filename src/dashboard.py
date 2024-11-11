@@ -1,16 +1,22 @@
 # import packages
 import streamlit as st
-#from streamlit_navigation_bar import st_navbar
+import cv2
+from streamlit_webrtc import webrtc_streamer,VideoTransformerBase
+from time import sleep
+from streamlit.runtime.scriptrunner import RerunException, StopException
 
 # configure the page
-def set_page_config():
-    st.set_page_config(
-        page_title="Sales Dashboard",
-        page_icon=":bar_chart:",
-        layout="wide",
-        initial_sidebar_state="expanded",
-    )
-    st.markdown("<style> footer {visibility: hidden;} </style>", unsafe_allow_html=True)
+st.set_page_config(
+    page_title="Sales Dashboard",
+    page_icon=":bar_chart:",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+st.markdown("<style> footer {visibility: hidden;} </style>", unsafe_allow_html=True)
+
+# camera config
+cap = cv2.VideoCapture(0)
+stframe = None
 
 # setup the page structure
 def create_structure():
@@ -20,42 +26,47 @@ def create_structure():
     with st.sidebar:
         st.markdown("## Example Sidebar")
 
+
 # setup tabs for the sensor
 def display_tabs():
+    global stframe
+
     # create tabs for the different inputs
     camera_tab, scale_tab = st.tabs(["Camera", "Scale"])
 
     with camera_tab:
-        st.header("Camera Feed and Shelf Gap Detection")
+        st.header("Camera Feed")
         cam, info = st.columns(2)
 
         with cam:
-            st.header("HAAA")
+            st.markdown("#### Shelf Gap Detection")
+            stframe = st.image([])
+
         with info:
-            st.header("info")
+            st.markdown("#### Information")
 
 
     with scale_tab:
         st.header("Weight Scale")
 
+
+# main function 
 def main():
-    set_page_config()
+    global stframe, cap
+
+    # render everything
     create_structure()
     display_tabs()
 
+    # start main loop
+    while True:
+        try:
+            _, frame = cap.read()
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            stframe.image(frame, channels="RGB")
+        except (RerunException, StopException):
+            cap.release()
+
+
 if __name__ == '__main__':
     main()
-
-
-
-#tab1, tab2, tab3 = st.tabs(["Cat", "Dog", "Owl"])
-
-#with tab1:
-#    st.header("A cat")
-#    st.image("https://static.streamlit.io/examples/cat.jpg", width=200)
-#with tab2:
-#    st.header("A dog")
-#    st.image("https://static.streamlit.io/examples/dog.jpg", width=200)
-#with tab3:
-#    st.header("An owl")
-#    st.image("https://static.streamlit.io/examples/owl.jpg", width=200)
