@@ -1,28 +1,27 @@
 import streamlit as st
+import cv2
+from PIL import Image
 
-# Inject custom CSS to create a red bar at the top of the app
-st.markdown("""
-    <style>
-    .red-bar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 20px; /* Adjust the height as needed */
-        background-color: red;
-        z-index: 9999;
-    }
-    .main-content {
-        padding-top: 20px; /* Adjust padding to prevent overlap */
-    }
-    </style>
-    <div class="red-bar"></div>
-    <div class="main-content">
-""", unsafe_allow_html=True)
+# Load the image using OpenCV
+image = cv2.imread("images/test_img_9.jpg")  # Replace with the path to your image
 
-# Main content of your app
-st.title("My Streamlit App")
-st.write("This app has a red bar at the top.")
+# Check if image loaded successfully
+if image is not None:
+    # Define text and position
+    text = "Hello, Streamlit!"
+    position = (50, 50)  # (x, y) coordinates for the text position
+    font = cv2.FONT_HERSHEY_PLAIN
+    font_scale = 5
+    color = (255, 255, 255)  # White color in BGR
+    thickness = 2
 
-# Close the main content div
-st.markdown("</div>", unsafe_allow_html=True)
+    # Put text on the image
+    cv2.putText(image, text, position, font, font_scale, color, thickness, cv2.LINE_AA)
+
+    # Convert the image to RGB (OpenCV uses BGR by default)
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    # Display the image in Streamlit
+    st.image(image_rgb, caption="Image with Text Overlay")
+else:
+    st.error("Error loading image. Please check the file path.")

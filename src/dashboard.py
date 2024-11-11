@@ -75,7 +75,7 @@ def display_sensor_row(sensor1, sensor2):
         if sensor2 is not None: icon2, text2, status2 = sensor2 
 
 
-        c_icon1, c_text1, c_status1, _, c_icon2, c_text2, c_status2 = st.columns([1,2,3,3,1,3,3], vertical_alignment="center")
+        c_icon1, c_text1, c_status1, _, c_icon2, c_text2, c_status2 = st.columns([1,3,3,3,1,3,3], vertical_alignment="center")
         if sensor1 is not None:
             with c_icon1:
                 st.image(icon1, width=35)
@@ -145,19 +145,19 @@ def display_tabs():
 
         ############################################
         with scale_tab:
-            weight, options = st.columns(2)
+            weight, info = st.columns(2)
 
             with weight:
                 st.markdown("#### Scale Value")
-            with options:
+            with info:
                 st.markdown("#### Information")
 
-            _, weight, _, options = st.columns([1,3,1,6])
+            _, weight, _, info = st.columns([1,3,1,6])
             with weight:
                 st.text("")
                 st.text("")
                 st.text("")
-                st.markdown("<h1 style='text-align: center;'>Weight: 17.14" + "kg</h1>", unsafe_allow_html=True)
+                st.markdown("<h1>Weight: 17.14" + "kg</h1>", unsafe_allow_html=True)
                 st.image("images/scale.svg", width=500)
             
             _, but, _ = st.columns([2,3,5])
@@ -166,7 +166,22 @@ def display_tabs():
 
         ############################################
         with humidity_tab:
-            st.header("Humidity")
+            humid, info = st.columns(2)
+            
+            with humid:
+                st.markdown("#### Humidity Recording")
+            with info:
+                st.markdown("#### Information")
+                
+            _, humid, _= st.columns([1,3,7])
+            with humid:
+                st.text("")
+                st.text("")
+                st.text("")
+                st.markdown("<h1>Humidity: 30%</h1>", unsafe_allow_html=True)
+            _, humid, _= st.columns([2,2,10])
+            with humid:
+                st.image("images/water_drops.svg", width=200)
 
         ############################################
         with temp_tab:
