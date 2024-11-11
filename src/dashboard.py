@@ -6,22 +6,44 @@ from time import sleep
 from streamlit.runtime.scriptrunner import RerunException, StopException
 import cam_detection
 
-# configure the page
-st.set_page_config(
-    page_title="Sales Dashboard",
-    page_icon=":bar_chart:",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-st.markdown("<style> footer {visibility: hidden;} </style>", unsafe_allow_html=True)
-
-# camera config
-#cap = cv2.VideoCapture(0)
+# global variables
 stframe = None
+
+# configure the page
+def configure():
+    st.set_page_config(
+        page_title="Sales Dashboard",
+        page_icon=":bar_chart:",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
+    st.markdown("""
+        <style>
+        footer {visibility: hidden;}
+        </style>
+    """, unsafe_allow_html=True)
+    st.markdown("""
+        <style>
+        .red-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 20px; /* Adjust the height as needed */
+            background-color: red;
+            z-index: 9999;
+        }
+        .main-content {
+            padding-top: 20px; /* Adjust padding to prevent overlap */
+        }
+        </style>
+        <div class="red-bar"></div>
+        <div class="main-content">
+    """, unsafe_allow_html=True)
+
 
 # setup the page structure
 def create_structure():
-    
     img, title = st.columns([1,18], vertical_alignment='bottom')
 
     with img:
@@ -32,8 +54,8 @@ def create_structure():
     # create sidebar
     with st.sidebar:
         st.image("images/logo.svg", width=200)
-        st.markdown("## Example Sidebar")
-
+        st.markdown("## Global View")
+        st.markdown("## Individual Shelf View")
 
     # Remove whitespace from the top of the page and sidebar
     st.markdown("""
@@ -47,89 +69,134 @@ def create_structure():
         </style>
         """, unsafe_allow_html=True)
 
+# show a sensor
+def display_sensor_row(sensor1, sensor2):
+    with st.container(height=60, border=False):
+        if sensor1 is not None: icon1, text1, status1 = sensor1 
+        if sensor2 is not None: icon2, text2, status2 = sensor2 
 
-# setup tabs for the sensor
-def display_tabs():
-    global stframe
 
+        c_icon1, c_text1, c_status1, _, c_icon2, c_text2, c_status2 = st.columns([1,2,3,3,1,3,3], vertical_alignment="center")
+        if sensor1 is not None:
+            with c_icon1:
+                st.image(icon1, width=35)
+            with c_text1:
+                st.markdown("**"+text1+"**")
+            with c_status1:
+                if status1 == "Active":
+                    st.success(status1)
+                else:
+                    st.error(status1)
+
+        if sensor2 is not None:
+            with c_icon2:
+                st.image(icon2, width=35)
+            with c_text2:
+                st.markdown("**"+text2+"**")
+            with c_status2:
+                if status2 == "Active":
+                    st.success(status2)
+                else:
+                    st.error(status2)
+
+# setup sensor info + location
+def display_sensors():
     st.divider()
-    loc, sensors, _ = st.columns([3, 3, 3])
+    loc, sensors, _ = st.columns([3, 7, 2])
     
     # location info
     with loc:
-        with st.container(border=True, height=200):
+        with st.container(height=320):
             st.markdown("### Shelf Location")
-            st.markdown("**Aisle: <num>**")
-            st.markdown("**Shelf: <num>**")
+            st.markdown("#### Aisle: 3")
+            st.markdown("#### Shelf: 7")
+    
     # sensor info
     with sensors:
-        with st.container(border=True, height=200):
+        with st.container(height=320):
             st.markdown("### Available Sensors")
 
-            box, text, _ = st.columns([1,4,10], vertical_alignment="center")
-            with box:
-                st.image("images/checkbox-checked.svg", width=20)
-            with text:
-                st.markdown("**Camera**")
+            image_sensor = ("images/camera_logo.svg", "Camera", "Active")
+            weight_sensor = ("images/scale_logo.svg", "Weight", "Active")
+            display_sensor_row(image_sensor, weight_sensor)
+            humidity_sensor = ("images/water_logo.svg", "Humidity", "Active")
+            temp_sensor = ("images/temp_logo.svg", "Temperature", "Inactive")
+            display_sensor_row(humidity_sensor, temp_sensor)
+            light_sensor = ("images/light_logo.svg", "Light", "Inactive")
+            display_sensor_row(light_sensor, None)
 
+# setup tabs for the sensors
+def display_tabs():
+    global stframe
+
+    with st.container(height=600):
+        # create tabs for the different inputs
+        camera_tab, scale_tab, humidity_tab, temp_tab, light_tab = st.tabs(["Video Camera", "Weight Scale", "Humidity", "Temperature", "Light"])
+
+        ############################################
+        with camera_tab:
+            cam, info = st.columns(2)
+
+            with cam:
+                st.markdown("#### Shelf Gap Detection")
+                stframe = st.image([])
+
+            with info:
+                st.markdown("#### Information")
+
+        ############################################
+        with scale_tab:
+            weight, options = st.columns(2)
+
+            with weight:
+                st.markdown("#### Scale Value")
+            with options:
+                st.markdown("#### Information")
+
+            _, weight, _, options = st.columns([1,3,1,6])
+            with weight:
+                st.text("")
+                st.text("")
+                st.text("")
+                st.markdown("<h1 style='text-align: center;'>Weight: 17.14" + "kg</h1>", unsafe_allow_html=True)
+                st.image("images/scale.svg", width=500)
             
-            box, text, _ = st.columns([1,4,10], vertical_alignment="center")
-            with box:
-                st.image("images/checkbox-checked.svg", width=20)
-            with text:
-                st.markdown("**Scale**")
+            _, but, _ = st.columns([2,3,5])
+            with but:
+                st.button("Tare", type="primary")
 
+        ############################################
+        with humidity_tab:
+            st.header("Humidity")
 
+        ############################################
+        with temp_tab:
+            st.header("Temperature")
 
-    # create tabs for the different inputs
-    #st.header("Sensors")
-    camera_tab, scale_tab, humidity_tab, temp_tab, light_tab = st.tabs(["Video Camera", "Weight Scale", "Humidity", "Temperature", "Light"])
+        ############################################
+        with light_tab:
+            st.header("Lighting")
 
-    ############################################
-    with camera_tab:
-        #st.header("Camera Feed")
-        cam, info = st.columns(2)
-
-        with cam:
-            st.markdown("#### Shelf Gap Detection")
-            stframe = st.image([])
-
-        with info:
-            st.markdown("#### Information")
-
-    ############################################
-    with scale_tab:
-        st.header("Weight Scale")
-
-    ############################################
-    with humidity_tab:
-        st.header("Humidity")
-
-    ############################################
-    with temp_tab:
-        st.header("Temperature")
-
-    ############################################
-    with light_tab:
-        st.header("Lighting")
 
 # main function 
 def main():
     global stframe, cap
 
     # render everything
+    configure()
     create_structure()
+    display_sensors()
     display_tabs()
 
     # start main loop
-    while True:
-        try:
-            #_, frame = cap.read()
-            #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            #stframe.image(frame, channels="RGB")
-            cam_detection.run_live_detection("../weights/shelf_detection_weights.pt", stframe)
-        except (RerunException, StopException):
-            cap.release()
+    #while True:
+    #    try:
+    #        #_, frame = cap.read()
+    #        #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    #        #stframe.image(frame, channels="RGB")
+    #        cam_detection.run_live_detection("../weights/shelf_detection_weights.pt", stframe)
+    #    except (RerunException, StopException):
+    #        cap.release()
 
 
 if __name__ == '__main__':
