@@ -39,7 +39,7 @@ def add_box_coordinates(frame, boxes, scale_factor=100):
 #function for doing the cv with the camera integrated
 def run_live_detection(weights_path, stframe):
 
-    # force jetson to use gpu instead of cpu 
+    # check if jetson use gpu instead of cpu (answer: it does not)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
 
