@@ -7,55 +7,79 @@ from IPython.display import display, Image
 import matplotlib.pyplot as plt
 import torch
 
+# function to mark bottom left of bounding box as (0,0) and then find the coordinate of the top right corner via number of pixels 
+def add_box_coordinates(frame, boxes, scale_factor=100):
+    for box in boxes:
+        x1, y1, x2, y2 = box.astype(int)
+        
+        # calculate the  relative coordinates (using bottom left as origin)
+        width = (x2 - x1) / scale_factor
+        height = (y2 - y1) / scale_factor
+        
+        # Format coordinates 
+        bottom_left = "(0.0, 0.0)"
+        top_right = f"({width:.1f}, {height:.1f})"
+        
+        # Bottom left coordinates just below box
+        cv2.putText(frame, bottom_left,
+                    (x1, y2 + 20),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    0.5, (0, 255, 0), 1)
+        
+        # Top right cordinates just above
+        cv2.putText(frame, top_right,
+                    (x2 - 100, y1 - 10),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    0.5, (0, 255, 0), 1)
+    
+    return frame
+
+#function for doing the cv with the camera integrated
 def run_live_detection(weights_path):
-    """
-    Run live shelf detection using the webcam and display the results.
-    Parameters:
-        weights_path: Path to the trained YOLOv8 weights.
-    """
-    # Load the trained model
+
+    # force jetson to use gpu instead of cpu 
     device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    #use trained model(best weights stored in mastertech2024/weights folder)
     model = YOLO(weights_path)
-
-    # Open the default camera
+    
+    # open camera at index 0 (0 is default cam, so integrated webcam for laptops, but usb for jetson)
     cam = cv2.VideoCapture(0)
-
+    
     while True:
-        # Capture a frame from the camera
+        
+        #read and inference frame
         ret, frame = cam.read()
-
-        # Run inference on the frame
         results = model(frame)[0]
-
-        # Setup supervision for visualization
-        # detections = sv.Detections.from_yolov8(results)
+        
+        # Setup supervision for visualisation
         detections = sv.Detections.from_ultralytics(results)
-
-        # Create box annotator
+        
+        # Annotate image and corner cordinates
         box_annotator = sv.BoxAnnotator()
-
-        # Annotate image
         annotated_frame = box_annotator.annotate(
             scene=frame.copy(),
             detections=detections,
-        #     labels=[f"{results.names[class_id]} {confidence:0.2f}"
-        #             for class_id, confidence in zip(detections.class_id, detections.confidence)]
         )
-
-        # Display the annotated frame
+        if len(detections) > 0:
+            annotated_frame = add_box_coordinates(
+                annotated_frame, 
+                detections.xyxy,  # Gets boxes in xyxy format
+                scale_factor=100
+            )
+        
         cv2.imshow('Shelf Detection', annotated_frame)
-
+        
         # Press 'q' to exit the loop
         if cv2.waitKey(1) == ord('q'):
             break
-
-    # Release the camera and close all windows
+    
+    # release and close cam
     cam.release()
     cv2.destroyAllWindows()
 
 def main():
     WEIGHTS_PATH = "../weights/shelf_detection_weights.pt"
-
     run_live_detection(WEIGHTS_PATH)
 
 if __name__ == "__main__":
