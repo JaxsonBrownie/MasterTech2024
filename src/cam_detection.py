@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import torch
 from streamlit.runtime.scriptrunner import RerunException, StopException
+import time
 
 # function to mark bottom left of bounding box as (0,0) and then find the coordinate of the top right corner via number of pixels 
 def add_box_coordinates(frame, boxes, scale_factor=100):
@@ -56,6 +57,7 @@ def run_live_detection(weights_path, stframe):
             ret, frame = cam.read()
             
             if ret:
+                #time.sleep(0.5)
                 results = model(frame)[0]
                 
                 # Setup supervision for visualisation
@@ -78,9 +80,6 @@ def run_live_detection(weights_path, stframe):
                 annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
                 stframe.image(annotated_frame, channels="RGB")
             
-            # Press 'q' to exit the loop
-            if cv2.waitKey(1) == ord('q'):
-                break
         except (RerunException, StopException):
             cam.release()
     
