@@ -39,6 +39,8 @@ def run_live_detection(weights_path):
 
     # force jetson to use gpu instead of cpu 
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using device: {device}")
+
 
     #use trained model(best weights stored in mastertech2024/weights folder)
     model = YOLO(weights_path)
