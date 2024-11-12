@@ -18,6 +18,9 @@ from sku_manager import SKU_Manager
 stframe = None
 db = SKU_Manager("data/sku_manager.json")
 api_data = None
+weight_text = None
+humid_text = None
+temp_text = None
 
 # generate sku for aisles
 def generate_sku(aisle: int, shelf: int, row: int) -> str:
@@ -215,7 +218,7 @@ def display_tabs():
 
 # setup columns for the sensors
 def display_columns():
-    global stframe, api_data
+    global stframe, api_data, weight_text, humid_text, temp_text
 
     camera_col, env_col = st.columns([3, 2], gap='medium')
 
@@ -237,7 +240,8 @@ def display_columns():
             with col1:
                 st.image("images/weight.svg", width=70)
             with col2:
-                st.markdown("## Weight: "+(api_data["weight"] if api_data else "10")+"kg", unsafe_allow_html=True)
+                weight_text = st.empty().markdown("## Weight:")
+                #st.markdown("## Weight: "+str(api_data["weight"])+"kg", unsafe_allow_html=True)
 
         # humidity
         with st.container(border=True):
@@ -245,7 +249,8 @@ def display_columns():
             with col1:
                 st.image("images/water_drops.svg", width=70)
             with col2:
-                st.markdown("## Humidity: "+(api_data["humidity"] if api_data else "30")+"%", unsafe_allow_html=True)
+                humid_text = st.empty().markdown("## Humidity:")
+                #st.markdown("## Humidity: "+(api_data["humidity"] if api_data else "30")+"%", unsafe_allow_html=True)
 
         # temperature
         with st.container(border=True):
@@ -253,7 +258,8 @@ def display_columns():
             with col1:
                 st.image("images/temp_logo.svg", width=70)
             with col2:
-                st.markdown("## Temperature: "+(api_data["temperature"] if api_data else "24")+"°C", unsafe_allow_html=True)
+                temp_text = st.empty().markdown("## Temperature:")
+                #st.markdown("## Temperature: "+(api_data["temperature"] if api_data else "24")+"°C", unsafe_allow_html=True)
 
         # lighting
         with st.container(border=True):
@@ -263,14 +269,20 @@ def display_columns():
             with col2:
                 st.markdown("## Lighting: On", unsafe_allow_html=True)
 
-# thread for requesting api data
+# thread for requesting api data (not used)
 def api_requester():
-    global api_data
+    global api_data, weight_text
     while True:
         try:
-            response = requests.get("http://192.168.10.3/data")
+            response = requests.get("http://192.168.10.251/data")
             api_data = response.json()
-            time.sleep(0.5)
+            print("API")
+            print(api_data)
+            print(str(api_data['weight']))
+            # print("WEIGHT"+str(api_data["weight"]))
+
+            #weight_text.text("## Weighrrrrrt: "+str(api_data["weight"])+"kg")
+
         except requests.RequestException as e:
             print("Request failed: ", e)
         time.sleep(2)
@@ -279,7 +291,7 @@ alerted_skus = set()
 
 # main function 
 def main():
-    global stframe
+    global stframe, weight_text, humid_text, temp_text
 
     # render everything
     configure()
@@ -292,8 +304,8 @@ def main():
     cam = cv2.VideoCapture(0)
 
     # start api thread
-    thread = threading.Thread(target=api_requester)
-    thread.start()
+    #thread = threading.Thread(target=api_requester)
+    #thread.start()
 
     # start main loop
     try:
@@ -345,6 +357,24 @@ def main():
                 
                 # Small delay to prevent overwhelming the system
                 #sleep(1)
+
+            
+
+            response = requests.get("http://192.168.10.251/data")
+            api_data = response.json()
+            #print("API")
+            print(api_data)
+            #print(str(api_data['weight']))
+
+            weight_text.markdown("## Weight: "+str(round(api_data["weight"], 3))+"g")
+            humid_text.markdown("## Humidity: "+str(api_data["humidity"])+"%")
+            temp_text.markdown("## Temperature: "+str(api_data["temperature"])+"°C")
+
+            time.sleep(0.5)
+
+
+
+
     except (RerunException, StopException):
         cam.release()
 
