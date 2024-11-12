@@ -259,6 +259,7 @@ def display_columns():
             with col2:
                 st.markdown("## Lighting: On", unsafe_allow_html=True)
 
+alerted_skus = set()
 
 # main function 
 def main():
@@ -277,13 +278,14 @@ def main():
     # start main loop
     try:
         
-        aisle=99
-        shelf=10
-        row=1
+        aisle=5
+        shelf=9
+        row=4
         current_sku = generate_sku(aisle, shelf, row)
         st.text(f"Current SKU: {current_sku}")
         
         status_placeholder = st.empty()
+        alert_placeholder = st.empty()
 
         # get coordinate generator (this starts a loop, but for some reason doesn't block???)
         coordinate_generator = run_live_detection("../weights/shelf_detection_weights.pt", stframe, cam)
@@ -295,6 +297,10 @@ def main():
             if coordinate_data and len(coordinate_data) > 0:
                 # coordinate_data[0] is now a tuple of (bottom_left, top_right)
                 bottom_left, top_right = coordinate_data[0]
+
+                if current_sku not in alerted_skus:
+                    alert_placeholder.error(f"Empty or Low product detected! - SKU: {current_sku} at Aisle {aisle}, Shelf {shelf}, Row {row}")
+                    alerted_skus.add(current_sku)
                 
                 # Create product if it doesn't exist
                 if not db.get_product_by_sku(current_sku):
@@ -315,7 +321,7 @@ def main():
                         top_right
                     )
                 
-                status_placeholder.text(f"Updated coordinates for {current_sku}\nCoordinates: BL{bottom_left}, TR{top_right}")
+                # status_placeholder.text(f"Updated coordinates for {current_sku}\nCoordinates: BL{bottom_left}, TR{top_right}")
                 
                 # Small delay to prevent overwhelming the system
                 #sleep(1)
