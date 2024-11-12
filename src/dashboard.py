@@ -2,7 +2,9 @@
 import streamlit as st
 import cv2
 # from streamlit_webrtc import webrtc_streamer,VideoTransformerBase
-from time import sleep
+import time
+import requests
+import threading
 from streamlit.runtime.scriptrunner import RerunException, StopException
 from cam_detection import run_live_detection
 import cam_detection
@@ -11,14 +13,16 @@ from sku_manager import SKU_Manager
 
 # logging.basicConfig(level=logging.INFO)
 # logger = logging.getLogger(__name__)
+
 # global variables
 stframe = None
 db = SKU_Manager("data/sku_manager.json")
+api_data = None
 
+# generate sku for aisles
 def generate_sku(aisle: int, shelf: int, row: int) -> str:
     """Generate SKU based on location (e.g., A01S02R03 for aisle 1, shelf 2, row 3)"""
     return f"A{aisle:02d}S{shelf:02d}R{row:02d}"
-
 
 # configure the page
 def configure():
@@ -211,7 +215,7 @@ def display_tabs():
 
 # setup columns for the sensors
 def display_columns():
-    global stframe
+    global stframe, api_data
 
     camera_col, env_col = st.columns([3, 2], gap='medium')
 
@@ -233,7 +237,7 @@ def display_columns():
             with col1:
                 st.image("images/weight.svg", width=70)
             with col2:
-                st.markdown("## Weight: 17.14kg", unsafe_allow_html=True)
+                st.markdown("## Weight: "+(api_data["weight"] if api_data else "10")+"kg", unsafe_allow_html=True)
 
         # humidity
         with st.container(border=True):
@@ -241,7 +245,7 @@ def display_columns():
             with col1:
                 st.image("images/water_drops.svg", width=70)
             with col2:
-                st.markdown("## Humidity: 30%", unsafe_allow_html=True)
+                st.markdown("## Humidity: "+(api_data["humidity"] if api_data else "30")+"%", unsafe_allow_html=True)
 
         # temperature
         with st.container(border=True):
@@ -249,7 +253,7 @@ def display_columns():
             with col1:
                 st.image("images/temp_logo.svg", width=70)
             with col2:
-                st.markdown("## Temperature: 24°C", unsafe_allow_html=True)
+                st.markdown("## Temperature: "+(api_data["temperature"] if api_data else "24")+"°C", unsafe_allow_html=True)
 
         # lighting
         with st.container(border=True):
@@ -259,6 +263,17 @@ def display_columns():
             with col2:
                 st.markdown("## Lighting: On", unsafe_allow_html=True)
 
+# thread for requesting api data
+def api_requester():
+    global api_data
+    while True:
+        try:
+            response = requests.get("http://192.168.10.3/data")
+            api_data = response.json()
+            time.sleep(0.5)
+        except requests.RequestException as e:
+            print("Request failed: ", e)
+        time.sleep(2)
 
 # main function 
 def main():
@@ -274,9 +289,12 @@ def main():
     # start camera
     cam = cv2.VideoCapture(0)
 
+    # start api thread
+    thread = threading.Thread(target=api_requester)
+    thread.start()
+
     # start main loop
     try:
-        
         aisle=99
         shelf=10
         row=1
@@ -285,7 +303,7 @@ def main():
         
         status_placeholder = st.empty()
 
-        # get coordinate generator (this starts a loop, but for some reason doesn't block???)
+        # get coordinate generator
         coordinate_generator = run_live_detection("../weights/shelf_detection_weights.pt", stframe, cam)
         
         # start looping thread
@@ -316,12 +334,11 @@ def main():
                     )
                 
                 status_placeholder.text(f"Updated coordinates for {current_sku}\nCoordinates: BL{bottom_left}, TR{top_right}")
-                
-                # Small delay to prevent overwhelming the system
-                #sleep(1)
     except (RerunException, StopException):
         cam.release()
 
+    # wait for api thread to finish (won't really get here)
+    thread.join()
 
 if __name__ == '__main__':
     main()
