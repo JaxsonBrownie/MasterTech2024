@@ -123,7 +123,7 @@ def display_sensor_row(sensor1, sensor2):
 # setup sensor info + location
 def display_sensors():
     st.divider()
-    loc, sensors, _ = st.columns([3, 7, 2])
+    loc, sensors, img = st.columns([3, 7, 2])
     
     # location info
     with loc:
@@ -145,6 +145,16 @@ def display_sensors():
             display_sensor_row(humidity_sensor, temp_sensor)
             light_sensor = ("images/light_logo.svg", "Light", "Inactive")
             display_sensor_row(light_sensor, None)
+
+    with img:
+        with st.container(height=320):
+            st.markdown("## ESL Image")
+            selection = st.selectbox("Image Number", [1, 2, 3])
+
+            # Button to submit
+            if st.button("Submit"):
+                # POST request
+                response = requests.post("http://192.168.10.251/display", data={"value" : str(selection)})
 
 # setup tabs for the sensors (not used anymore)
 def display_tabs():
@@ -379,7 +389,7 @@ def main():
         cam.release()
 
     # wait for api thread to finish (won't really get here)
-    thread.join()
+    #thread.join()
 
 if __name__ == '__main__':
     main()
